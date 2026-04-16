@@ -33,12 +33,12 @@ It is fully dynamic and requires no manual configuration of battery entities.
 
 ### Repository Structure
 
-/packages/dynamic-battery-monitoring-travel-mode.yaml  
-/cards/  
+/packages/battery-package/dynamic-battery-monitoring-travel-mode.yaml  
+/packages/battery-package/cards/  
   ├── battery-overview.yaml  
   ├── travel-readiness.yaml  
   └── travel-list.yaml  
-/README.md  
+/packages/battery-package/README.md  
 
 ---
 
