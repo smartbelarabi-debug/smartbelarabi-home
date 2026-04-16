@@ -1,0 +1,11 @@
+type: markdown
+title: Devices to Check Before Travel
+content: |
+  {% if is_state('binary_sensor.battery_travel_active', 'on') %}
+  ⚠️ The following devices need attention:
+
+  {{ states('sensor.battery_travel_list') }}
+
+  {% else %}
+  ✅ All batteries are OK for travel
+  {% endif %}
