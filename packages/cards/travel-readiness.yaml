@@ -1,7 +1,0 @@
-type: entities
-title: Travel Battery Readiness
-show_header_toggle: false
-entities:
-  - entity: input_number.battery_travel_threshold
-  - entity: sensor.battery_travel_count
-  - entity: binary_sensor.battery_travel_active
