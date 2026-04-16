@@ -1,0 +1,210 @@
+# ============================================================
+# Dynamic Battery Monitoring Package with Travel Mode
+# ============================================================
+# Purpose
+# - Dynamically monitor battery percentage sensors in Home Assistant
+# - Use Home Assistant's native device_class: battery
+# - Provide warning, critical, and travel-readiness views
+#
+# Notes
+# - This package is fully dynamic
+# - It does not require a manual entity list
+# - It only includes sensor entities with:
+#     attributes.device_class = battery
+# - Battery data must be exposed as a numeric state
+# ============================================================
+
+# ============================================================
+# Helpers
+# User-adjustable thresholds
+# ============================================================
+input_number:
+  battery_warning_threshold:
+    name: Battery Warning Threshold
+    min: 1
+    max: 100
+    step: 1
+    mode: box
+    unit_of_measurement: "%"
+    icon: mdi:battery-20
+    initial: 20
+
+  battery_critical_threshold:
+    name: Battery Critical Threshold
+    min: 1
+    max: 100
+    step: 1
+    mode: box
+    unit_of_measurement: "%"
+    icon: mdi:battery-alert
+    initial: 10
+
+  battery_travel_threshold:
+    name: Battery Travel Threshold
+    min: 1
+    max: 100
+    step: 1
+    mode: box
+    unit_of_measurement: "%"
+    icon: mdi:airplane
+    initial: 40
+
+# ============================================================
+# Template Sensors
+# Counts and readable lists
+# ============================================================
+template:
+  - sensor:
+      # ------------------------------------------------------
+      # Warning count
+      # Number of battery sensors at or below warning threshold
+      # ------------------------------------------------------
+      - name: Battery Warning Count
+        unique_id: battery_warning_count
+        icon: mdi:battery-20
+        state: >
+          {% set threshold = states('input_number.battery_warning_threshold') | int(20) %}
+          {% set ns = namespace(count=0) %}
+          {% for s in states.sensor | selectattr('attributes.device_class', '==', 'battery') %}
+            {% set level = s.state | int(-1) %}
+            {% if 0 <= level <= threshold %}
+              {% set ns.count = ns.count + 1 %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.count }}
+
+      # ------------------------------------------------------
+      # Critical count
+      # Number of battery sensors at or below critical threshold
+      # ------------------------------------------------------
+      - name: Battery Critical Count
+        unique_id: battery_critical_count
+        icon: mdi:battery-alert
+        state: >
+          {% set threshold = states('input_number.battery_critical_threshold') | int(10) %}
+          {% set ns = namespace(count=0) %}
+          {% for s in states.sensor | selectattr('attributes.device_class', '==', 'battery') %}
+            {% set level = s.state | int(-1) %}
+            {% if 0 <= level <= threshold %}
+              {% set ns.count = ns.count + 1 %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.count }}
+
+      # ------------------------------------------------------
+      # Travel count
+      # Number of battery sensors at or below travel threshold
+      # ------------------------------------------------------
+      - name: Battery Travel Count
+        unique_id: battery_travel_count
+        icon: mdi:airplane
+        state: >
+          {% set threshold = states('input_number.battery_travel_threshold') | int(40) %}
+          {% set ns = namespace(count=0) %}
+          {% for s in states.sensor | selectattr('attributes.device_class', '==', 'battery') %}
+            {% set level = s.state | int(-1) %}
+            {% if 0 <= level <= threshold %}
+              {% set ns.count = ns.count + 1 %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.count }}
+
+      # ------------------------------------------------------
+      # Warning list
+      # Readable list of sensors at or below warning threshold
+      # ------------------------------------------------------
+      - name: Battery Warning List
+        unique_id: battery_warning_list
+        icon: mdi:battery-20
+        state: >
+          {% set threshold = states('input_number.battery_warning_threshold') | int(20) %}
+          {% set ns = namespace(items=[]) %}
+          {% for s in states.sensor | selectattr('attributes.device_class', '==', 'battery') %}
+            {% set level = s.state | int(-1) %}
+            {% if 0 <= level <= threshold %}
+              {% set ns.items = ns.items + [s.name ~ ' (' ~ level ~ '%)'] %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.items | join(', ') if ns.items else 'All batteries OK' }}
+
+      # ------------------------------------------------------
+      # Critical list
+      # Readable list of sensors at or below critical threshold
+      # ------------------------------------------------------
+      - name: Battery Critical List
+        unique_id: battery_critical_list
+        icon: mdi:battery-alert
+        state: >
+          {% set threshold = states('input_number.battery_critical_threshold') | int(10) %}
+          {% set ns = namespace(items=[]) %}
+          {% for s in states.sensor | selectattr('attributes.device_class', '==', 'battery') %}
+            {% set level = s.state | int(-1) %}
+            {% if 0 <= level <= threshold %}
+              {% set ns.items = ns.items + [s.name ~ ' (' ~ level ~ '%)'] %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.items | join(', ') if ns.items else 'No critical batteries' }}
+
+      # ------------------------------------------------------
+      # Travel list
+      # Readable list of sensors at or below travel threshold
+      # ------------------------------------------------------
+      - name: Battery Travel List
+        unique_id: battery_travel_list
+        icon: mdi:airplane
+        state: >
+          {% set threshold = states('input_number.battery_travel_threshold') | int(40) %}
+          {% set ns = namespace(items=[]) %}
+          {% for s in states.sensor | selectattr('attributes.device_class', '==', 'battery') %}
+            {% set level = s.state | int(-1) %}
+            {% if 0 <= level <= threshold %}
+              {% set ns.items = ns.items + [s.name ~ ' (' ~ level ~ '%)'] %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.items | join(', ') if ns.items else 'All travel batteries OK' }}
+
+  - binary_sensor:
+      # ------------------------------------------------------
+      # Warning active
+      # On when one or more warning-level batteries exist
+      # ------------------------------------------------------
+      - name: Battery Warning Active
+        unique_id: battery_warning_active
+        icon: mdi:battery-20
+        state: >
+          {{ states('sensor.battery_warning_count') | int(0) > 0 }}
+
+      # ------------------------------------------------------
+      # Critical active
+      # On when one or more critical-level batteries exist
+      # ------------------------------------------------------
+      - name: Battery Critical Active
+        unique_id: battery_critical_active
+        icon: mdi:battery-alert
+        state: >
+          {{ states('sensor.battery_critical_count') | int(0) > 0 }}
+
+      # ------------------------------------------------------
+      # Travel active
+      # On when one or more travel-level batteries exist
+      # ------------------------------------------------------
+      - name: Battery Travel Active
+        unique_id: battery_travel_active
+        icon: mdi:airplane
+        state: >
+          {{ states('sensor.battery_travel_count') | int(0) > 0 }}
+
+# ============================================================
+# Automations
+# None included in this package
+# ============================================================
+
+# ============================================================
+# Scripts
+# None included in this package
+# ============================================================
+
+# ============================================================
+# Notifications
+# None included in this package
+# ============================================================
