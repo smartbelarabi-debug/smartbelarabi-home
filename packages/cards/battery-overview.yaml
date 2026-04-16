@@ -1,8 +1,0 @@
-type: entities
-title: Battery Monitoring Overview
-show_header_toggle: false
-entities:
-  - entity: input_number.battery_warning_threshold
-  - entity: input_number.battery_critical_threshold
-  - entity: sensor.battery_warning_count
-  - entity: sensor.battery_critical_count
