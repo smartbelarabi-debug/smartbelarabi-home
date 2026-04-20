@@ -1,11 +1,60 @@
-type: markdown
-title: Devices to Check Before Travel
-content: |
-  {% if is_state('binary_sensor.battery_travel_active', 'on') %}
-  ⚠️ The following devices need attention:
+type: vertical-stack
+cards:
+  - type: markdown
+    content: >
+      ## Travel Battery Check
 
-  {{ states('sensor.battery_travel_list') }}
 
-  {% else %}
-  ✅ All batteries are OK for travel
-  {% endif %}
+      Set your **Battery Travel Threshold** below based on how long you’ll be
+      away.
+
+
+      **Rule of thumb**
+
+      - **1 to 2 days:** 30 to 35%
+
+      - **Up to 1 week:** 40%
+
+      - **1 to 2 weeks:** 50%
+
+      - **Around 1 month:** 60%
+
+
+      **Practical advice**
+
+      - For short trips, focus on important devices like locks, door sensors,
+      leak sensors, and anything security-related.
+
+      - For longer trips, be more conservative and replace batteries earlier.
+
+      - If a device matters while you are away, it is safer to replace before
+      travel than risk downtime.
+  - type: entities
+    title: Battery Travel Readiness
+    show_header_toggle: false
+    entities:
+      - entity: input_number.battery_travel_threshold
+        name: Battery Travel Threshold
+      - entity: sensor.battery_travel_count
+        name: Devices Below Travel Threshold
+      - entity: binary_sensor.battery_travel_active
+        name: Travel Battery Alert Active
+    state_color: false
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.battery_travel_active
+        state: "on"
+    card:
+      type: markdown
+      title: Devices to Check Before Travel
+      content: |
+        {{ states('sensor.battery_travel_list') }}
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.battery_travel_active
+        state: "off"
+    card:
+      type: markdown
+      title: Devices to Check Before Travel
+      content: |
+        All travel batteries are OK.
